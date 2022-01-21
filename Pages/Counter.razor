@@ -1,0 +1,107 @@
+﻿@page "/counter"
+@inject ISnackbar Snackbar
+
+<PageTitle>Counter</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Counter</MudText>
+<MudText Class="mb-4">Current count: @currentCount</MudText>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="IncrementCount">Click me</MudButton>
+<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Reset">Reset</MudButton>
+
+@if (_clickVelocity > 0 || _toastUnlocked == true)
+{
+	<MudAlert Severity="_severity">
+		<MudText Typo="Typo.h5">Your Velocity: @_clickVelocity.</MudText>
+		<MudText Typo="Typo.caption"> @_alertContent</MudText>
+	</MudAlert>
+}
+
+@if (String.IsNullOrEmpty(_contentUrl) == false)
+{
+
+	<img src="@_contentUrl" />
+}
+
+@code {
+	private Int32 currentCount = 0;
+	private DateTime? _lastTimeClicked = null;
+	private Int32 _clickVelocity = 0;
+	private Severity _severity = Severity.Error;
+	private String _alertContent = String.Empty;
+	private Boolean _toastUnlocked;
+	private String _contentUrl = String.Empty;
+
+	private void IncrementCount()
+	{
+		if (_toastUnlocked == true) { return; }
+
+		currentCount++;
+
+		DateTime now = DateTime.Now;
+
+		if (_lastTimeClicked.HasValue == true)
+		{
+			TimeSpan span = now - _lastTimeClicked.Value;
+			_clickVelocity = (Int32)(1.0 / span.TotalMinutes);
+
+			if (_clickVelocity < 150)
+			{
+				_severity = Severity.Error;
+				_alertContent = "To slow! Click faster.";
+			}
+			else if (_clickVelocity < 250)
+			{
+				_severity = Severity.Warning;
+				_alertContent = "Better but still to slow! Keep clicking";
+			}
+			else if (_clickVelocity < 350)
+			{
+				_severity = Severity.Info;
+				_alertContent = "Goal nearly reached. Stay on track. Just one more push.";
+			}
+			else
+			{
+				_severity = Severity.Success;
+				_alertContent = "Goal reached!!!. Secret snack unlocked";
+				_toastUnlocked = true;
+				Snackbar.Add("Click here to unlock your promotion", Severity.Success, config =>
+				{
+					config.RequireInteraction = true;
+					config.ShowCloseIcon = false;
+					config.Onclick = snackbar =>
+					{
+						UnlockSecrets();
+						return Task.CompletedTask;
+					};
+				});
+			}
+		}
+
+		_lastTimeClicked = now;
+	}
+
+	private void UnlockSecrets()
+	{
+		var codes = new[] { 100, 102, 202, 204, 301, 401, 406, 409, 429, 500, 502, 400, 408, 599, };
+		Random rand = new();
+
+		var code = codes[rand.Next(0, codes.Length)];
+		_contentUrl = $"https://http.cat/{code}.jpg";
+		StateHasChanged();
+	}
+
+	protected override void OnInitialized()
+	{
+		Reset();
+	}
+
+	private void Reset()
+	{
+		currentCount = 0;
+		_lastTimeClicked = null;
+		_clickVelocity = 0;
+		_severity = Severity.Error;
+		_toastUnlocked = false;
+		_contentUrl = String.Empty;
+	}
+}
