@@ -10,7 +10,7 @@
 
 @if (_clickVelocity > 0 || _toastUnlocked == true)
 {
-	<MudAlert Severity="_severity">
+	<MudAlert Class="mt-6" Severity="_severity">
 		<MudText Typo="Typo.h5">Your Velocity: @_clickVelocity.</MudText>
 		<MudText Typo="Typo.caption"> @_alertContent</MudText>
 	</MudAlert>
